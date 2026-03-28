@@ -1,0 +1,45 @@
+name: email-triage-env
+description: An AI agent environment for email triage classification. The agent receives customer emails and must classify category, priority, and choose the correct action.
+version: 1.0.0
+author: Hackathon Team
+task_type: classification
+
+action_space:
+  type: discrete
+  description: Three-dimensional action (category, priority, action)
+  category:
+    - billing
+    - technical
+    - general
+  priority:
+    - low
+    - medium
+    - high
+  action:
+    - reply
+    - escalate
+    - ignore
+
+observation_space:
+  type: dict
+  description: Email task observation with email text, sender info, and allowed values
+  fields:
+    - task_id
+    - email_text
+    - sender_type
+    - possible_categories
+    - possible_priorities
+    - possible_actions
+    - difficulty
+    - step_count
+    - last_action_error
+    - message
+
+reward_function:
+  description: Partial credit scoring for email triage
+  correct_category: 0.4
+  correct_priority: 0.3
+  correct_action: 0.3
+  invalid_action_penalty: -0.5
+  max_score: 1.0
+  min_score: 0.0

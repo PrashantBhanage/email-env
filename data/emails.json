@@ -1,0 +1,47 @@
+[
+  {
+    "id": "task_001",
+    "email_text": "I forgot my password and cannot log in.",
+    "sender_type": "customer",
+    "expected_category": "technical",
+    "expected_priority": "low",
+    "expected_action": "reply",
+    "difficulty": "easy"
+  },
+  {
+    "id": "task_002",
+    "email_text": "What are your support hours on weekends?",
+    "sender_type": "customer",
+    "expected_category": "general",
+    "expected_priority": "low",
+    "expected_action": "reply",
+    "difficulty": "easy"
+  },
+  {
+    "id": "task_003",
+    "email_text": "I was charged twice for my monthly subscription.",
+    "sender_type": "customer",
+    "expected_category": "billing",
+    "expected_priority": "high",
+    "expected_action": "escalate",
+    "difficulty": "medium"
+  },
+  {
+    "id": "task_004",
+    "email_text": "The app crashes every time I upload a PDF.",
+    "sender_type": "customer",
+    "expected_category": "technical",
+    "expected_priority": "medium",
+    "expected_action": "escalate",
+    "difficulty": "medium"
+  },
+  {
+    "id": "task_005",
+    "email_text": "I requested a refund 10 days ago and still haven't received it. This is unacceptable.",
+    "sender_type": "customer",
+    "expected_category": "billing",
+    "expected_priority": "high",
+    "expected_action": "escalate",
+    "difficulty": "hard"
+  }
+]
