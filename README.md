@@ -1,3 +1,12 @@
+---
+title: Email Env
+emoji: 📧
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Email Triage Env
 
 A lightweight AI agent environment for email triage classification. The agent receives business/customer emails and must classify the email category, assign priority, and choose the correct action.
