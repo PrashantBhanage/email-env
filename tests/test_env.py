@@ -2,7 +2,7 @@
 
 import pytest
 from environment.env import EmailTriageEnv
-from environment.models import Action
+from environment.models import Action, ResetResult
 
 
 class TestEmailTriageEnv:
@@ -108,3 +108,19 @@ class TestEmailTriageEnv:
         
         assert state["done"] is False
         assert state["step_count"] == 0
+    
+    def test_reset_result_wrapped_observation(self):
+        """Test that reset returns a ResetResult with wrapped observation (OpenEnv compatible)."""
+        env = EmailTriageEnv()
+        obs = env.reset(task_id="task_001")
+        
+        # Wrap in ResetResult like the API does
+        result = ResetResult(observation=obs)
+        
+        # Verify the structure
+        assert "observation" in result.model_dump()
+        assert result.observation.task_id == "task_001"
+        assert result.observation.email_text is not None
+        assert result.observation.possible_categories == ["billing", "technical", "general"]
+        assert result.observation.possible_priorities == ["low", "medium", "high"]
+        assert result.observation.possible_actions == ["reply", "escalate", "ignore"]

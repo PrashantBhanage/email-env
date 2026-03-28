@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from environment.env import EmailTriageEnv
-from environment.models import Action, Observation, StepResult
+from environment.models import Action, Observation, StepResult, ResetResult
 from environment.utils import get_task_summary
 
 
@@ -39,13 +39,17 @@ def root():
     }
 
 
-@app.post("/reset", response_model=Observation)
+@app.post("/reset")
 def reset(request: Optional[ResetRequest] = None):
-    """Reset the environment with an optional task_id."""
+    """Reset the environment with an optional task_id.
+    
+    Returns a ResetResult with wrapped observation for OpenEnv validator compatibility.
+    """
     try:
         task_id = request.task_id if request else None
         observation = env.reset(task_id=task_id)
-        return observation
+        result = ResetResult(observation=observation)
+        return JSONResponse(content=result.model_dump())
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

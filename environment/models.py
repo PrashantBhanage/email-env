@@ -31,3 +31,11 @@ class StepResult(BaseModel):
     reward: float
     done: bool
     info: dict = Field(default_factory=dict)
+
+
+class ResetResult(BaseModel):
+    """Result returned after resetting the environment.
+    
+    This wraps the observation in a structure compatible with OpenEnv validators.
+    """
+    observation: Observation
