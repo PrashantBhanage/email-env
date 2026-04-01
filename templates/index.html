@@ -4,94 +4,690 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Triage Environment</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020d07;
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.15);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        canvas#particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--green);
+            top: -100px;
+            right: -100px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: #10b981;
+            bottom: -50px;
+            left: -50px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Animations */
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate {
+            animation: fadeSlideUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+        .delay-6 { animation-delay: 0.6s; }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 0;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 32px;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, var(--green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .sub {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--green) 0%, #16a34a 100%);
+            color: var(--bg);
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Sections */
+        section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--green);
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .demo-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .demo-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 20px;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .demo-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: var(--bg);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Result */
+        .result-card {
+            margin-top: 24px;
+            padding: 24px;
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: fadeSlideUp 0.5s ease-out;
+        }
+
+        .result-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .badge-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-category {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+        }
+
+        .badge-priority {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-action {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+        }
+
+        .result-reward {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .result-reward span {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* API Grid */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .api-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .api-card:hover {
+            border-color: var(--green);
+        }
+
+        .api-method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--green);
+            background: rgba(34, 197, 94, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .api-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .api-desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                min-height: 70vh;
+            }
+
+            .result-badges {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="background">
-        <div class="glow-blob blob-1"></div>
-        <div class="glow-blob blob-2"></div>
-        <div class="glow-blob blob-3"></div>
-        <div class="particles"></div>
-    </div>
+    <canvas id="particles"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
 
-    <header class="hero">
+    <section class="hero">
         <div class="container">
-            <div class="status-badge">
-                <span class="status-dot"></span>
+            <div class="badge animate delay-1">
+                <span class="badge-dot"></span>
                 System Running
             </div>
-            <h1 class="hero-title">Email Triage Environment</h1>
-            <p class="hero-tagline">AI-Powered Email Classification & Smart Triage</p>
-            <p class="hero-description">
-                Automate your email workflow with intelligent categorization, priority detection, and automated actions.
-                Built for modern businesses seeking efficiency and precision.
-            </p>
-            <a href="#api" class="cta-button">View API</a>
+            <h1 class="animate delay-2">Email Triage Environment</h1>
+            <p class="sub animate delay-3">AI-Powered Email Classification & Smart Triage</p>
+            <a href="/docs" class="btn animate delay-4">View API</a>
         </div>
-    </header>
+    </section>
 
     <section class="features">
         <div class="container">
-            <h2 class="section-title">Key Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
+            <h2 class="section-title animate delay-5">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card animate delay-5">
                     <div class="feature-icon">📧</div>
                     <h3>Email Classification</h3>
-                    <p>Automatically categorize emails into billing, technical, or general inquiries with high accuracy.</p>
+                    <p>Automatically categorize emails into billing, technical, or general inquiries</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate delay-6">
                     <div class="feature-icon">⚡</div>
                     <h3>Priority Detection</h3>
-                    <p>Smart priority assessment from low to high urgency, ensuring critical issues are handled first.</p>
+                    <p>Smart priority assessment: low, medium, or high urgency</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate delay-6">
                     <div class="feature-icon">🤖</div>
                     <h3>Smart Triage</h3>
-                    <p>Intelligent action recommendations: reply, escalate, or ignore based on content analysis.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Fast API Integration</h3>
-                    <p>RESTful API designed for seamless integration with existing email systems and workflows.</p>
+                    <p>Intelligent actions: reply, escalate, or ignore</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="api" class="api-section">
+    <section class="demo-section">
         <div class="container">
-            <h2 class="section-title">API Endpoints</h2>
+            <h2 class="section-title animate delay-5">Try the Classifier</h2>
+            <div class="demo-card animate delay-6">
+                <textarea id="emailInput" class="demo-input" placeholder="Paste your email here...">Subject: Urgent billing issue
+
+Hi, I was charged twice this month and need this resolved immediately.</textarea>
+                <button id="analyzeBtn" class="btn demo-btn">Analyze Email</button>
+                <div id="resultCard" class="result-card">
+                    <div class="result-badges">
+                        <span class="badge-item badge-category" id="resCategory">-</span>
+                        <span class="badge-item badge-priority" id="resPriority">-</span>
+                        <span class="badge-item badge-action" id="resAction">-</span>
+                    </div>
+                    <p class="result-reward">Reward: <span id="resReward">-</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="api">
+        <div class="container">
+            <h2 class="section-title animate delay-5">API Endpoints</h2>
             <div class="api-grid">
-                <div class="api-card">
-                    <code>GET /health</code>
-                    <p>Check system status and version</p>
+                <div class="api-card animate delay-5">
+                    <span class="api-method">GET</span>
+                    <p class="api-path">/health</p>
+                    <p class="api-desc">Check system status</p>
                 </div>
-                <div class="api-card">
-                    <code>POST /api/reset</code>
-                    <p>Reset environment with optional task</p>
+                <div class="api-card animate delay-5">
+                    <span class="api-method">POST</span>
+                    <p class="api-path">/reset</p>
+                    <p class="api-desc">Reset & get new email</p>
                 </div>
-                <div class="api-card">
-                    <code>POST /api/step</code>
-                    <p>Submit classification action</p>
+                <div class="api-card animate delay-6">
+                    <span class="api-method">POST</span>
+                    <p class="api-path">/step</p>
+                    <p class="api-desc">Submit classification</p>
                 </div>
-                <div class="api-card">
-                    <code>GET /api/state</code>
-                    <p>Get current environment state</p>
+                <div class="api-card animate delay-6">
+                    <span class="api-method">GET</span>
+                    <p class="api-path">/state</p>
+                    <p class="api-desc">Current environment state</p>
                 </div>
-                <div class="api-card">
-                    <code>GET /api/tasks</code>
-                    <p>List available tasks</p>
+                <div class="api-card animate delay-6">
+                    <span class="api-method">GET</span>
+                    <p class="api-path">/tasks</p>
+                    <p class="api-desc">List available tasks</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="footer">
+    <footer>
         <div class="container">
-            <p>&copy; 2024 Email Triage Environment. Built for OpenEnv Hackathon.</p>
+            <p>© 2024 Email Triage Environment. Built for OpenEnv Hackathon.</p>
         </div>
     </footer>
 
-    <script src="/static/js/script.js"></script>
+    <script>
+        // Canvas Particle Network
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = 80;
+        const connectionDistance = 120;
+        const mouseDistance = 150;
+
+        let mouse = { x: null, y: null };
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // Mouse interaction
+                if (mouse.x !== null) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouseDistance) {
+                        const force = (mouseDistance - dist) / mouseDistance;
+                        this.vx -= (dx / dist) * force * 0.02;
+                        this.vy -= (dy / dist) * force * 0.02;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#22c55e';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(34, 197, 94, ${0.15 * (1 - dist / connectionDistance)})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            drawConnections();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        initParticles();
+        animate();
+
+        // Live Demo Logic
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const emailInput = document.getElementById('emailInput');
+        const resultCard = document.getElementById('resultCard');
+        const resCategory = document.getElementById('resCategory');
+        const resPriority = document.getElementById('resPriority');
+        const resAction = document.getElementById('resAction');
+        const resReward = document.getElementById('resReward');
+
+        function analyzeContent(text) {
+            const lower = text.toLowerCase();
+            let category = 'general';
+            let priority = 'low';
+            let action = 'reply';
+
+            if (lower.includes('billing') || lower.includes('charged') || lower.includes('payment') || lower.includes('invoice') || lower.includes('refund')) {
+                category = 'billing';
+                priority = 'high';
+                action = 'escalate';
+            } else if (lower.includes('error') || lower.includes('bug') || lower.includes('crash') || lower.includes('broken') || lower.includes('fix') || lower.includes('help')) {
+                category = 'technical';
+                priority = 'medium';
+                action = 'reply';
+            }
+
+            return { category, priority, action };
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            const emailText = emailInput.value;
+            if (!emailText.trim()) return;
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = 'Analyzing<span class="spinner"></span>';
+            resultCard.classList.remove('show');
+
+            try {
+                // Step 1: Reset to get the email task
+                const resetRes = await fetch('/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const resetData = await resetRes.json();
+
+                // Step 2: Analyze content and determine classification
+                const classification = analyzeContent(emailText);
+
+                // Step 3: Submit the classification
+                const stepRes = await fetch('/step', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(classification)
+                });
+                const stepData = await stepRes.json();
+
+                // Display results
+                resCategory.textContent = classification.category.toUpperCase();
+                resPriority.textContent = classification.priority.toUpperCase();
+                resAction.textContent = classification.action.toUpperCase();
+                resReward.textContent = stepData.reward !== undefined ? stepData.reward.toFixed(2) : 'N/A';
+
+                resultCard.classList.add('show');
+            } catch (err) {
+                console.error(err);
+                alert('Error calling API. Make sure the server is running.');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Email';
+            }
+        });
+    </script>
 </body>
 </html>
