@@ -1,8 +1,12 @@
-"""FastAPI application for Email Triage Environment."""
+"""FastAPI application for Email Triage Environment - Premium Landing Page + API Backend."""
 
+import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.requests import Request
 from pydantic import BaseModel
 
 from environment.env import EmailTriageEnv
@@ -14,7 +18,20 @@ from environment.utils import get_task_summary
 env = EmailTriageEnv()
 
 # FastAPI app
-app = FastAPI(title="Email Triage Environment", version="1.0.0")
+app = FastAPI(
+    title="Email Triage Environment",
+    version="1.0.0",
+    description="AI-Powered Email Classification & Smart Triage API"
+)
+
+# Setup templates and static files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Mount static files if directory exists
+static_dir = os.path.join(BASE_DIR, "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 class ResetRequest(BaseModel):
@@ -29,9 +46,15 @@ class StepRequest(BaseModel):
     action: str
 
 
-@app.get("/")
-def root():
-    """Health/status endpoint."""
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Render the premium animated landing page."""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/health")
+def health():
+    """Health/status endpoint returning JSON."""
     return {
         "status": "ok",
         "name": "Email Triage Environment",
@@ -85,4 +108,5 @@ def tasks():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run(app, host="0.0.0.0", port=port)
