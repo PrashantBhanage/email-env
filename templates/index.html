@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Triage Environment</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="background">
+        <div class="glow-blob blob-1"></div>
+        <div class="glow-blob blob-2"></div>
+        <div class="glow-blob blob-3"></div>
+        <div class="particles"></div>
+    </div>
+
+    <header class="hero">
+        <div class="container">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                System Running
+            </div>
+            <h1 class="hero-title">Email Triage Environment</h1>
+            <p class="hero-tagline">AI-Powered Email Classification & Smart Triage</p>
+            <p class="hero-description">
+                Automate your email workflow with intelligent categorization, priority detection, and automated actions.
+                Built for modern businesses seeking efficiency and precision.
+            </p>
+            <a href="#api" class="cta-button">View API</a>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📧</div>
+                    <h3>Email Classification</h3>
+                    <p>Automatically categorize emails into billing, technical, or general inquiries with high accuracy.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Priority Detection</h3>
+                    <p>Smart priority assessment from low to high urgency, ensuring critical issues are handled first.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Smart Triage</h3>
+                    <p>Intelligent action recommendations: reply, escalate, or ignore based on content analysis.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Fast API Integration</h3>
+                    <p>RESTful API designed for seamless integration with existing email systems and workflows.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="api" class="api-section">
+        <div class="container">
+            <h2 class="section-title">API Endpoints</h2>
+            <div class="api-grid">
+                <div class="api-card">
+                    <code>GET /health</code>
+                    <p>Check system status and version</p>
+                </div>
+                <div class="api-card">
+                    <code>POST /api/reset</code>
+                    <p>Reset environment with optional task</p>
+                </div>
+                <div class="api-card">
+                    <code>POST /api/step</code>
+                    <p>Submit classification action</p>
+                </div>
+                <div class="api-card">
+                    <code>GET /api/state</code>
+                    <p>Get current environment state</p>
+                </div>
+                <div class="api-card">
+                    <code>GET /api/tasks</code>
+                    <p>List available tasks</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Email Triage Environment. Built for OpenEnv Hackathon.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
