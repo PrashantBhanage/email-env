@@ -1,18 +1,14 @@
 """FastAPI application for Email Triage Environment - Premium Landing Page + API Backend."""
-
 import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.requests import Request
 from pydantic import BaseModel
 
 from environment.env import EmailTriageEnv
 from environment.models import Action, Observation, StepResult, ResetResult
 from environment.utils import get_task_summary
-
 
 # Global environment instance
 env = EmailTriageEnv()
@@ -24,11 +20,9 @@ app = FastAPI(
     description="AI-Powered Email Classification & Smart Triage API"
 )
 
-# Setup templates and static files
+# Setup static files
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# Mount static files if directory exists
 static_dir = os.path.join(BASE_DIR, "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
@@ -47,14 +41,14 @@ class StepRequest(BaseModel):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    """Render the premium animated landing page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+async def root():
+    """Render the landing page."""
+    with open(os.path.join(BASE_DIR, "templates", "index.html"), "r") as f:
+        return HTMLResponse(content=f.read())
 
 
 @app.get("/health")
 def health():
-    """Health/status endpoint returning JSON."""
     return {
         "status": "ok",
         "name": "Email Triage Environment",
@@ -64,10 +58,6 @@ def health():
 
 @app.post("/reset")
 def reset(request: Optional[ResetRequest] = None):
-    """Reset the environment with an optional task_id.
-    
-    Returns a ResetResult with wrapped observation for OpenEnv validator compatibility.
-    """
     try:
         task_id = request.task_id if request else None
         observation = env.reset(task_id=task_id)
@@ -81,7 +71,6 @@ def reset(request: Optional[ResetRequest] = None):
 
 @app.post("/step")
 def step(request: StepRequest):
-    """Take an action and receive the result."""
     try:
         action = Action(
             category=request.category,
@@ -96,13 +85,11 @@ def step(request: StepRequest):
 
 @app.get("/state")
 def state():
-    """Get current environment state."""
     return env.state()
 
 
 @app.get("/tasks")
 def tasks():
-    """Get list of available tasks."""
     return get_task_summary()
 
 
