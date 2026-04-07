@@ -15,4 +15,4 @@ tests
 *.db
 uv.lock
 README.md
-data
+
