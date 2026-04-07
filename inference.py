@@ -112,4 +112,8 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+<<<<<<< HEAD
 EOF
+=======
+EOF
+>>>>>>> 785131a (DockerFile Fixed)
