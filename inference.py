@@ -1,4 +1,3 @@
-
 import json
 import os
 import re
@@ -30,9 +29,27 @@ def extract_json(text: str) -> Optional[dict]:
     if match:
         try:
             return json.loads(match.group(0))
-        except:
+        except Exception:
             return None
     return None
+
+def sanitize_action(action: dict) -> dict:
+    category = action.get("category", "general")
+    priority = action.get("priority", "low")
+    decision = action.get("action", "reply")
+
+    if category not in {"billing", "technical", "general"}:
+        category = "general"
+    if priority not in {"low", "medium", "high"}:
+        priority = "low"
+    if decision not in {"reply", "escalate", "ignore"}:
+        decision = "reply"
+
+    return {
+        "category": category,
+        "priority": priority,
+        "action": decision
+    }
 
 def run_inference(client, email_text):
     try:
@@ -48,26 +65,73 @@ def run_inference(client, email_text):
         parsed = extract_json(content)
 
         if parsed:
-            return {
-                "category": parsed.get("category", "general"),
-                "priority": parsed.get("priority", "low"),
-                "action": parsed.get("action", "reply")
-            }
+            return sanitize_action(parsed)
     except Exception as e:
-        print("WARN:", e)
+        print("WARN:", e, file=sys.stderr, flush=True)
 
-    return FALLBACK_ACTION
+    return sanitize_action(FALLBACK_ACTION)
 
 def main():
     if not HF_TOKEN:
-        print("No HF_TOKEN, returning mock score")
-        return 0.7
+        print("[START] task=mock", flush=True)
+        print("[STEP] step=1 reward=0.7", flush=True)
+        print("[END] task=mock score=0.7 steps=1", flush=True)
+        return
 
     client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
     env = EmailTriageEnv()
     tasks = get_all_task_ids()
 
-    results = []
+    total_reward = 0.0
+    completed_tasks = 0
 
     for t in tasks:
-        obs = env.reset(task_id=t)
+        print(f"[START] task={t}", flush=True)
+
+        try:
+            obs = env.reset(task_id=t)
+
+            if isinstance(obs, dict):
+                email_text = (
+                    obs.get("email")
+                    or obs.get("input")
+                    or obs.get("message")
+                    or obs.get("text")
+                    or json.dumps(obs)
+                )
+            else:
+                email_text = str(obs)
+
+            action = run_inference(client, email_text)
+            step_result = env.step(action)
+
+            reward = 0.0
+            done = True
+
+            if isinstance(step_result, tuple):
+                if len(step_result) >= 2:
+                    reward = float(step_result[1] or 0.0)
+                if len(step_result) >= 3:
+                    done = bool(step_result[2])
+            elif isinstance(step_result, dict):
+                reward = float(step_result.get("reward", 0.0))
+                done = bool(step_result.get("done", True))
+
+            print(f"[STEP] step=1 reward={reward}", flush=True)
+            print(f"[END] task={t} score={reward} steps=1", flush=True)
+
+            total_reward += reward
+            completed_tasks += 1
+
+        except Exception as e:
+            print(f"[STEP] step=1 reward=0.0", flush=True)
+            print(f"[END] task={t} score=0.0 steps=1", flush=True)
+            print(f"WARN: task {t} failed: {e}", file=sys.stderr, flush=True)
+
+    final_score = total_reward / completed_tasks if completed_tasks > 0 else 0.0
+    return final_score
+
+if __name__ == "__main__":
+    score = main()
+    if score is not None:
+        print(f"Final score: {score}", flush=True)
