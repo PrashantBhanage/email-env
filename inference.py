@@ -1,21 +1,17 @@
-cat > inference.py << 'EOF'
-#!/usr/bin/env python3
 
-import os
-import sys
 import json
-import requests
-from openai import OpenAI
+import os
+import re
+import sys
+from typing import Optional
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+from openai import OpenAI
+from environment.env import EmailTriageEnv
+from environment.tasks import get_all_task_ids
+
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN")
-LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
-
-client = OpenAI(
-    api_key=HF_TOKEN if HF_TOKEN else "dummy-key",
-    base_url="https://router.huggingface.co/v1"
-)
 
 FALLBACK_ACTION = {
     "category": "general",
@@ -23,97 +19,55 @@ FALLBACK_ACTION = {
     "action": "reply"
 }
 
+SYSTEM_PROMPT = """Classify the email and return JSON:
+category: billing | technical | general
+priority: low | medium | high
+action: reply | escalate | ignore
+Only return JSON."""
 
-def log(msg: str):
-    print(msg, flush=True)
+def extract_json(text: str) -> Optional[dict]:
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except:
+            return None
+    return None
 
-
-def safe_json(res):
+def run_inference(client, email_text):
     try:
-        return res.json()
-    except Exception:
-        return {}
+        res = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": email_text}
+            ],
+            temperature=0.1
+        )
+        content = res.choices[0].message.content or ""
+        parsed = extract_json(content)
 
-
-def safe_request(method, url, **kwargs):
-    try:
-        res = requests.request(method, url, timeout=15, **kwargs)
-        res.raise_for_status()
-        return safe_json(res)
+        if parsed:
+            return {
+                "category": parsed.get("category", "general"),
+                "priority": parsed.get("priority", "low"),
+                "action": parsed.get("action", "reply")
+            }
     except Exception as e:
-        log(f"ERROR: request failed -> {e}")
-        return {}
-
-
-def choose_action(email_text: str):
-    text = (email_text or "").lower()
-
-    if "bill" in text or "charged" in text or "payment" in text:
-        return {
-            "category": "billing",
-            "priority": "high",
-            "action": "escalate"
-        }
-
-    if "error" in text or "bug" in text or "login" in text or "issue" in text:
-        return {
-            "category": "technical",
-            "priority": "medium",
-            "action": "reply"
-        }
+        print("WARN:", e)
 
     return FALLBACK_ACTION
 
-
 def main():
-    log("START")
+    if not HF_TOKEN:
+        print("No HF_TOKEN, returning mock score")
+        return 0.7
 
-    try:
-        log("STEP: health")
-        health = safe_request("GET", f"{API_BASE_URL}/health")
-        log(f"HEALTH: {json.dumps(health)}")
+    client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
+    env = EmailTriageEnv()
+    tasks = get_all_task_ids()
 
-        log("STEP: reset")
-        reset_data = safe_request("POST", f"{API_BASE_URL}/reset", json={})
+    results = []
 
-        observation = reset_data.get("observation", {})
-        email_text = observation.get("email_text", "")
-
-        if not email_text:
-            log("WARN: missing email_text, using fallback")
-            email_text = "General customer inquiry"
-
-        log(f"OBSERVATION: {email_text}")
-
-        log("STEP: classify")
-        action = choose_action(email_text)
-        log(f"ACTION: {json.dumps(action)}")
-
-        log("STEP: step")
-        result = safe_request("POST", f"{API_BASE_URL}/step", json=action)
-        log(f"RESULT: {json.dumps(result)}")
-
-        log("STEP: state")
-        state = safe_request("GET", f"{API_BASE_URL}/state")
-        log(f"STATE: {json.dumps(state)}")
-
-        log("STEP: tasks")
-        tasks = safe_request("GET", f"{API_BASE_URL}/tasks")
-        log(f"TASKS: {json.dumps(tasks)}")
-
-        log("END")
-        return 0
-
-    except Exception as e:
-        log(f"FATAL ERROR: {e}")
-        log("END")
-        return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-<<<<<<< HEAD
-EOF
-=======
-EOF
->>>>>>> 785131a (DockerFile Fixed)
+    for t in tasks:
+        obs = env.reset(task_id=t)
